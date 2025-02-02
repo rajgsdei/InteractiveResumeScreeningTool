@@ -1,0 +1,95 @@
+{% extends 'resume_screening/base.html' %}  <!-- Extend the base.html template -->
+
+{% load static %}
+
+{% block title %}Resume Screening Tool{% endblock %}
+
+{% block style %}
+<link href="{% static 'styles/view_resumes.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<section class="view-resume">
+    <div class="container">
+        <h2>Uploaded Resumes</h2>
+
+        {% if page_obj.object_list %}
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Skills</th>
+                <th>Education</th>
+                <th>Resume File</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for resume in page_obj.object_list %}
+            <tr>
+                <td>{{ resume.name }}</td>
+                <td>{{ resume.email }}</td>
+                <td>{{ resume.phone }}</td>
+                <td>{{ resume.skills|join:', ' }}</td>
+                <td>
+                    {% if resume.education|length > 50 %}
+                    {{ resume.education|slice:":50" }}... <br/><span class="see-more-btn"
+                                                                     data-content="{{ resume.education }}">See More</span>
+                    {% else %}
+                    {{ resume.education }}
+                    {% endif %}
+                </td>
+                <td><a href="{{ MEDIA_URL }}resume/{{ resume.resume_file }}" target="_blank">Download</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+            <span class="current-page">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <p>No resumes uploaded yet.</p>
+        <p><a href="/upload/">Upload now</a></p>
+        {% endif %}
+    </div>
+</section>
+<!-- Modal for "See More" Content -->
+<div class="see-more-content" id="see-more-modal">
+    <p id="see-more-text"></p>
+    <button onclick="closeModal()">Close</button>
+</div>
+
+<div class="overlay" id="overlay" style="display: none;" onclick="closeModal()"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show modal for long content
+    document.querySelectorAll('.see-more-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var content = this.getAttribute('data-content');
+            document.getElementById('see-more-text').textContent = content;
+            document.getElementById('see-more-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        });
+    });
+
+    // Close the modal
+    function closeModal() {
+        document.getElementById('see-more-modal').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+</script>
+{% endblock %}

@@ -5,9 +5,9 @@ class Resume(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     skills = models.JSONField()
-    experience = models.FloatField()
+    experience = models.FloatField(null=True, blank=True)
     education = models.TextField()
-    resume_file = models.FileField(upload_to='uploaded/resumes/')  # Storing files
+    resume_file = models.FileField(upload_to='resumes/')
 
     def __str__(self):
         return self.name
