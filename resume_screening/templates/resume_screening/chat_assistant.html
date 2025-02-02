@@ -1,0 +1,55 @@
+{% extends 'resume_screening/base.html' %}
+
+{% block style %}
+  <style>
+  #user-input{
+      height: 34px;
+    width: 500px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div id="chat-container">
+    <div id="chat-box">
+      <div id="chat-output"></div>
+    </div>
+    <input type="text" id="user-input" placeholder="Ask about resumes..." />
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script>
+    document.getElementById("send-btn").addEventListener("click", function() {
+      var userInput = document.getElementById("user-input").value;
+      if (userInput) {
+        appendMessage("User", userInput);
+        sendQuery(userInput);
+      }
+    });
+
+    function appendMessage(sender, message) {
+      const messageElement = document.createElement("div");
+      messageElement.innerHTML = `<b>${sender}: </b> ${message}`;
+      document.getElementById("chat-output").appendChild(messageElement);
+    }
+
+    function sendQuery(query) {
+      fetch("/chatbot_query/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]')?.value
+        },
+        body: JSON.stringify({ query: query })
+      })
+      .then(response => response.json())
+      .then(data => {
+        appendMessage("Bot", data.response);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        appendMessage("Bot", "Sorry, I couldn't understand that.");
+      });
+    }
+  </script>
+{% endblock %}

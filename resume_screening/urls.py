@@ -9,5 +9,7 @@ urlpatterns = [
     path('view-resumes/', views.view_resumes, name='view-resumes'),
     path('about/', views.about, name='about'),
     path('extract-resume-data/', views.extract_resume_data_from_files, name='extract_resume_data'),
+    path('chat-assistant/', views.chat_assistant, name='chat-assistant'),
+    path('chatbot_query/', views.chatbot_query, name='chatbot_query'),
 ]
 
