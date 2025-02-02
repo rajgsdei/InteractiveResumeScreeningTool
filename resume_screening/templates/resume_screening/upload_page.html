@@ -1,0 +1,21 @@
+{% extends 'resume_screening/base.html' %}  <!-- Extend the base.html template -->
+
+{% block title %}Upload Your Resume{% endblock %}
+
+{% block content %}
+    <section class="upload">
+        <h2>Upload Your Resume</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="resume">Choose a resume file to upload:</label><br>
+            <input type="file" id="resume" name="resume"><br><br>
+            <button type="submit" class="cta-button">Upload</button>
+        </form>
+
+        {% if upload_message %}
+        <div class="upload-message">
+            {{ upload_message|safe }}  <!-- 'safe' to render the HTML link -->
+        </div>
+        {% endif %}
+    </section>
+{% endblock %}
