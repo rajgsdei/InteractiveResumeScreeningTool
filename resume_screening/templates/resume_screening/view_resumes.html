@@ -14,37 +14,45 @@
         <h2>Uploaded Resumes</h2>
 
         {% if page_obj.object_list %}
-        <table>
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Skills</th>
-                <th>Education</th>
-                <th>Resume File</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for resume in page_obj.object_list %}
-            <tr>
-                <td>{{ resume.name }}</td>
-                <td>{{ resume.email }}</td>
-                <td>{{ resume.phone }}</td>
-                <td>{{ resume.skills|join:', ' }}</td>
-                <td>
-                    {% if resume.education|length > 50 %}
-                    {{ resume.education|slice:":50" }}... <br/><span class="see-more-btn"
-                                                                     data-content="{{ resume.education }}">See More</span>
-                    {% else %}
-                    {{ resume.education }}
-                    {% endif %}
-                </td>
-                <td><a href="{{ MEDIA_URL }}resume/{{ resume.resume_file }}" target="_blank">Download</a></td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Skills</th>
+                    <th>Experience</th>
+                    <th>Current CTC</th>
+                    <th>Expected CTC</th>
+                    <th>Education</th>
+                    <th>Resume File</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for resume in page_obj.object_list %}
+                <tr>
+                    <td>{{ resume.name }}</td>
+                    <td>{{ resume.email }}</td>
+                    <td>{{ resume.phone }}</td>
+                    <td>{{ resume.skills|join:', ' }}</td>
+                    <td>{{ resume.experience }}</td>
+                    <td>{{ resume.current_ctc }}</td>
+                    <td>{{ resume.expected_ctc }}</td>
+                    <td>
+                        {% if resume.education|length > 50 %}
+                        {{ resume.education|slice:":50" }}... <br/><span class="see-more-btn"
+                                                                         data-content="{{ resume.education }}">See More</span>
+                        {% else %}
+                        {{ resume.education }}
+                        {% endif %}
+                    </td>
+                    <td><a href="{{ MEDIA_URL }}resume/{{ resume.resume_file }}" target="_blank">Download</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <div class="pagination">
             {% if page_obj.has_previous %}

@@ -1,22 +1,144 @@
-{% extends 'resume_screening/base.html' %}  <!-- Extend the base.html template -->
+{% extends 'resume_screening/base.html' %}
 
 {% block title %}Upload Your Resume{% endblock %}
 
 {% block content %}
-    <section class="upload">
-        <h2>Upload Your Resume</h2>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <label for="resume">Choose a resume file to upload:</label><br>
-            <input type="file" id="resume" name="resume" multiple><br><br>
-            <button type="submit" class="cta-button">{{upload_btn_text}}</button>
-        </form>
+<section class="upload">
+    <h2>Upload Your Resume</h2>
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
 
-        {% if upload_message %}
-        <div class="upload-message">
-            <br/>
-            {{ upload_message|safe }}  <!-- 'safe' to render the HTML link -->
+        <label for="resume">Select Resumes:</label>
+        <input type="file" id="resume" name="resume" multiple required>
+        <br><br>
+
+        <div class="table-wrapper">
+            <table border="1" id="resumeTable" class="responsive-table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Applied for</th>
+                    <th>Experience</th>
+                    <th>Current CTC</th>
+                    <th>Expected CTC</th>
+                    <th>Feedback</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                               <tbody>
+                    {% if all_resumes %}
+                        {% for resume in all_resumes %}
+                            <tr>
+                                <td>{{ resume.name }}</td>
+                                <td>{{ resume.email }}</td>
+                                <td>{{ resume.phone }}</td>
+                                <td>{{ resume.applied_for }}</td>
+                                <td>{{ resume.experience }}</td>
+                                <td>{{ resume.current_ctc }}</td>
+                                <td>{{ resume.expected_ctc }}</td>
+                                <td>{{ resume.recruiter_feedback }}</td>
+                                <td>{{ resume.hiring_status }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10">No resume uploaded!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+
+            </table>
         </div>
-        {% endif %}
-    </section>
+        <br>
+
+        <button type="submit" class="cta-button" id="uploadButton">Upload</button>
+
+    </form>
+
+    {% if upload_message %}
+    <div class="upload-message">
+        <br/>
+        {{ upload_message|safe }}  <!-- 'safe' to render the HTML link -->
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Function to handle file selection and extract the data
+    document.getElementById('resume').addEventListener('change', function(event) {
+        const files = event.target.files;
+        const tableBody = document.querySelector('#resumeTable tbody');
+        const noRecordRow = document.getElementById('no-record-row');
+        const uploadButton = document.getElementById('uploadButton');
+        tableBody.innerHTML = '';
+        uploadButton.disabled = true;
+        uploadButton.textContent = 'Loading...';
+
+        // Create a FormData object to send the selected files to the backend
+        const formData = new FormData();
+
+        // Append each selected file to the FormData object
+        for (let i = 0; i < files.length; i++) {
+            formData.append('resume', files[i]);
+        }
+
+        // Use AJAX to send the FormData to the server
+        fetch('/extract-resume-data/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // CSRF token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // If no records were found
+            if (noRecordRow && data.length === 0) {
+                noRecordRow.style.display = 'table-row';
+            } else {
+                if(noRecordRow) noRecordRow.style.display = 'none';
+
+                // Populate table rows with extracted data
+                data.forEach((resume, index) => {
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td><input type="text" name="name_${index}" value="${resume.name}" required></td>
+                        <td><input type="email" name="email_${index}" value="${resume.email}" required></td>
+                        <td><input type="text" name="phone_${index}" value="${resume.phone}" required></td>
+                        <td><input type="text" name="applied_for_${index}" value="${resume.applied_for}"></td>
+                        <td><input type="number" name="current_ctc${index}" step="0.1" min="0" value="${resume.experience}"></td>
+                        <td><input type="number" name="expected_ctc${index}" step="0.1" min="0" value="${resume.current_ctc}"></td>
+                        <td><input type="number" name="experience_${index}" step="0.1" min="0" value="${resume.expected_ctc}"></td>
+                        <td><textarea name="recruiter_feedback_${index}"></textarea></td>
+                        <td>
+                            <select name="hiring_status_${index}">
+                                <option value="Pending">Pending</option>
+                                <option value="Hired">Hired</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </td>
+                        <input type="hidden" name="skills_${index}" value="${resume.skills}">
+                        <input type="hidden" name="education_${index}" value="${resume.education}">
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+            }
+
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload';
+        })
+        .catch(error => {
+            console.error('Error extracting data:', error);
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload';
+        });
+    });
+</script>
 {% endblock %}

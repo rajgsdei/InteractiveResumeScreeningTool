@@ -8,5 +8,6 @@ urlpatterns = [
     path('upload/', views.upload, name='upload'),
     path('view-resumes/', views.view_resumes, name='view-resumes'),
     path('about/', views.about, name='about'),
+    path('extract-resume-data/', views.extract_resume_data_from_files, name='extract_resume_data'),
 ]
 

@@ -5,8 +5,10 @@ import docx
 import re
 import os
 import traceback
+import random
 
-from django.http import HttpResponse
+from .utilities.save_file import save_uploaded_file
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
 from .models import Resume
@@ -31,17 +33,74 @@ def extract_resume_data(text):
     name = re.search(r"([A-Z][a-z]+\s[A-Z][a-z]+)", text)  # Basic regex for name
     email = re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", text)
     phone = re.search(r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", text)
+    education = re.findall(
+        r"(Bachelor['’]?\s?(of\s[A-Za-z]+|\w+)\s?[A-Za-z]+|Master['’]?\s?(of\s[A-Za-z]+|\w+)\s?[A-Za-z]+|PhD\s?[A-Za-z]*|Associate['’]?\s?[A-Za-z]+|[A-Za-z]+\sDegree|University[\sA-Za-z]+|College[\sA-Za-z]+)[^\n]*",
+        text, re.IGNORECASE)
+
+    education = [' '.join(filter(None, edu)).strip() for edu in education]
 
     skills = ["Python", "Django", "Machine Learning", "AI", "JavaScript", "React", "SQL"]
     found_skills = [skill for skill in skills if skill.lower() in text.lower()]
+
+    applied_for = re.search(r"Applied\s*for[:\s]*(.*)", text, re.IGNORECASE)
+    applied_for = applied_for.group(1).strip() if applied_for else "Not Found"
+
+    experience = re.search(r"Experience[:\s]*(\d+[\s\w]*)", text, re.IGNORECASE)
+    experience = experience.group(1).strip() if experience else "Not Found"
+
+    current_ctc = re.search(r"Current\s*CTC[:\s]*([\d,]+(?:\s?[kK]|\s?[lL]?\s?pa)?)", text, re.IGNORECASE)
+    current_ctc = current_ctc.group(1).strip() if current_ctc else "Not Found"
+
+    expected_ctc = re.search(r"Expected\s*CTC[:\s]*([\d,]+(?:\s?[kK]|\s?[lL]?\s?pa)?)", text, re.IGNORECASE)
+    expected_ctc = expected_ctc.group(1).strip() if expected_ctc else "Not Found"
 
     return {
         "name": name.group() if name else "Unknown",
         "email": email.group() if email else "Not Found",
         "phone": phone.group() if phone else "Not Found",
         "skills": found_skills,
-        "education": text
+        "education": education if education else ["Not Found"],
+        "applied_for": applied_for,
+        "experience": experience,
+        "current_ctc": current_ctc,
+        "expected_ctc": expected_ctc
     }
+
+def extract_resume_data_from_files(request):
+    if request.method == 'POST' and request.FILES.getlist('resume'):
+        files = request.FILES.getlist('resume')
+        extracted_data_list = []
+
+        for file in files:
+            try:
+                # We won't save the file here; just extract the data
+                if file.name.endswith('.pdf'):
+                    text = extract_text_from_pdf(file)
+                elif file.name.endswith('.docx'):
+                    text = extract_text_from_docx(file)
+                else:
+                    continue  # Skip unsupported file formats
+
+                extracted_data = extract_resume_data(text)
+                extracted_data_list.append({
+                    "name": extracted_data.get("name", ""),
+                    "email": extracted_data.get("email", ""),
+                    "phone": extracted_data.get("phone", ""),
+                    "skills": extracted_data['skills'],
+                    "education": extracted_data['education'],
+                    "applied_for": extracted_data['applied_for'],
+                    "experience": extracted_data['experience'],
+                    "current_ctc": extracted_data['current_ctc'],
+                    "expected_ctc": extracted_data['expected_ctc']
+                })
+
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
+        return JsonResponse(extracted_data_list, safe=False)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
 
 
 def home(request):
@@ -70,59 +129,57 @@ def view_resumes(request):
 def upload(request):
     upload_message = ""
     upload_btn_text = "Upload"
+    uploaded_files = []
+    all_resumes = []
 
     if request.method == 'POST' and request.FILES.getlist('resume'):  # Using getlist to retrieve all uploaded files
         resumes = request.FILES.getlist('resume')  # Get all the files from the form
-        uploaded_files = []
 
         for resume in resumes:
-            # Define the directory where you want to save the file
-            upload_dir = 'resume/'
-            upload_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
-
-            # Ensure the directory exists
-            if not os.path.exists(upload_path):
-                os.makedirs(upload_path)
-
-            # Save the file to the specified directory
-            fs = FileSystemStorage(location=upload_path)
-            filename = fs.save(resume.name, resume)
-            uploaded_file_url = fs.url(filename)  # Get the URL for the uploaded file
-
-            # Extract text based on file type
-            if filename.endswith('.pdf'):
-                text = extract_text_from_pdf(fs.path(filename))
-            elif filename.endswith('.docx'):
-                text = extract_text_from_docx(fs.path(filename))
-            else:
-                return render(request, 'resume_screening/upload_page.html', {'upload_message': 'Unsupported file format'})
-
-            # Extract structured resume data
-            extracted_data = extract_resume_data(text)
-
-            # Save structured data into the database
             try:
+                # Save the file using the utility function
+                filename, uploaded_file_url = save_uploaded_file(resume)
+
+                # Additional form fields
+                experience = request.POST.get(f'experience_{len(uploaded_files)}', None)
+                ai_score = round(random.uniform(0, 100), 2)  # Placeholder AI score
+                skills = [request.POST.get(f'skills_{len(uploaded_files)}')]
+                education = request.POST.get(f'education_{len(uploaded_files)}', '')
+
+                # Save resume data into the database (including filename and other form data)
                 Resume.objects.create(
-                    name=extracted_data['name'],
-                    email=extracted_data['email'],
-                    phone=extracted_data['phone'],
-                    skills=extracted_data['skills'],
-                    education=extracted_data['education'],
-                    resume_file=filename  # Just save the filename
+                    name=request.POST.get(f'name_{len(uploaded_files)}', ''),
+                    email=request.POST.get(f'email_{len(uploaded_files)}', ''),
+                    phone=request.POST.get(f'phone_{len(uploaded_files)}', ''),
+                    skills=skills,
+                    education=education,
+                    experience=float(experience) if experience else None,
+                    applied_for=request.POST.get(f'applied_for_{len(uploaded_files)}', 'Unknown'),
+                    recruiter_feedback=request.POST.get(f'recruiter_feedback_{len(uploaded_files)}', ''),
+                    hiring_status=request.POST.get(f'hiring_status_{len(uploaded_files)}', 'Pending'),
+                    score=ai_score,  # AI score as placeholder
+                    resume_file=filename
                 )
+
                 uploaded_files.append(filename)  # Keep track of successfully uploaded files
+
             except Exception as e:
                 print(f"An error occurred: {e}")
 
         # Set appropriate upload message based on the number of successfully uploaded files
         if uploaded_files:
             upload_message = f'{len(uploaded_files)} resume(s) uploaded successfully!'
+            all_resumes = Resume.objects.filter(resume_file__in=uploaded_files)
             upload_btn_text = "Upload another resume"
         else:
             upload_message = "No resumes were uploaded."
             upload_btn_text = "Upload"
+            all_resumes = []
+
+
 
     return render(request, 'resume_screening/upload_page.html', {
         'upload_message': upload_message,
-        'upload_btn_text': upload_btn_text
+        'upload_btn_text': upload_btn_text,
+        'all_resumes': all_resumes
     })
