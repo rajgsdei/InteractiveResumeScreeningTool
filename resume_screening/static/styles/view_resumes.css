@@ -1,133 +1,141 @@
+body {
+	font-family: 'Roboto', sans-serif;
+	background-color: #f4f7fc;
+	margin: 0;
+	padding: 0;
+}
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f7fc;
-            margin: 0;
-            padding: 0;
-        }
+h1 {
+	text-align: center;
+	margin-top: 50px;
+	font-size: 36px;
+}
 
-        h1 {
-            text-align: center;
-            margin-top: 50px;
-            font-size: 36px;
-        }
+.view-resume {
+	margin-bottom: 42px;
+	padding-bottom: 28px;
+}
 
-        .container {
-            width: 80%;
-            margin: 0 auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+.container {
+	width: 80%;
+	margin: 0 auto;
+}
 
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            vertical-align: middle;
-        }
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
 
-        th {
-            background-color: #71a4b6;
-            color: white;
-            font-weight: 500;
-        }
+th,
+td {
+	padding: 15px;
+	text-align: left;
+	border: 1px solid #ddd;
+	background-color: #fff;
+	vertical-align: middle;
+}
 
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+th {
+	background-color: #71a4b6;
+	color: white;
+	font-weight: 500;
+}
 
-        tr:hover {
-            background-color: #f1f1f1;
-        }
+tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
 
-        td {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+tr:hover {
+	background-color: #f1f1f1;
+}
 
-        .see-more-btn {
-            color: #71a4b6;
-            cursor: pointer;
-            font-size: small;
-        }
-        .see-more-btn:hover {
-            color: #188181;
-        }
+td {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 
-        .see-more-content {
-            display: none;
-            background-color: rgb(255 255 255 / 80%);
-            color: #000000;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 30px;
-            width: 80%;
-            max-width: 80%;
-            z-index: 1000;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
+.see-more-btn {
+	color: #71a4b6;
+	cursor: pointer;
+	font-size: small;
+}
 
-        .see-more-content p {
-            font-size: 16px;
-        }
+.see-more-btn:hover {
+	color: #188181;
+}
 
-        .see-more-content button {
-            background-color: #71a4b6;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-            border-radius: 5px;
-        }
+.see-more-content {
+	display: none;
+	background-color: rgb(255 255 255 / 80%);
+	color: #000000;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 30px;
+	width: 80%;
+	max-width: 80%;
+	z-index: 1000;
+	border-radius: 10px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
 
-        .see-more-content button:hover {
-            background-color: #188181;
-        }
+.see-more-content p {
+	font-size: 16px;
+}
 
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
+.see-more-content button {
+	background-color: #71a4b6;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	cursor: pointer;
+	font-size: 16px;
+	margin-top: 20px;
+	border-radius: 5px;
+}
 
-        .pagination {
-            margin-top: 20px;
-            text-align: center;
-        }
+.see-more-content button:hover {
+	background-color: #188181;
+}
 
-        .pagination a {
-            margin: 0 5px;
-            padding: 8px 12px;
-            background-color: #71a4b6;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 999;
+}
 
-        .pagination a:hover {
-            background-color: #0056b3;
-        }
+.pagination {
+	margin-top: 20px;
+	text-align: center;
+}
+
+.pagination a {
+	margin: 0 5px;
+	padding: 8px 12px;
+	background-color: #71a4b6;
+	color: white;
+	text-decoration: none;
+	border-radius: 5px;
+}
+
+.pagination a:hover {
+	background-color: #188181;
+	color: white;
+}
+
 body a {
-    color: #71a4b6;
-    text-decoration: none;
+	color: #71a4b6;
+	text-decoration: none;
 }
 
 body a:hover {
-    color: #188181;
+	color: #188181;
 }
-
