@@ -71,53 +71,56 @@ def upload(request):
     upload_message = ""
     upload_btn_text = "Upload"
 
-    if request.method == 'POST' and request.FILES.get('resume'):
-        resume = request.FILES['resume']
+    if request.method == 'POST' and request.FILES.getlist('resume'):  # Using getlist to retrieve all uploaded files
+        resumes = request.FILES.getlist('resume')  # Get all the files from the form
+        uploaded_files = []
 
-        # Define the relative directory where you want to save the file
-        upload_dir = 'resume/'  # Save files inside the 'media/resume/' folder
+        for resume in resumes:
+            # Define the directory where you want to save the file
+            upload_dir = 'resume/'
+            upload_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
 
-        # Ensure the directory exists (relative to MEDIA_ROOT)
-        upload_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
-        if not os.path.exists(upload_path):
-            os.makedirs(upload_path)
+            # Ensure the directory exists
+            if not os.path.exists(upload_path):
+                os.makedirs(upload_path)
 
-        # Save the file to the specified directory using FileSystemStorage
-        fs = FileSystemStorage(location=upload_path)  # Pass relative path for storage
-        filename = fs.save(resume.name, resume)
-        uploaded_file_url = fs.url(filename)  # URL that will be used for the file download link
+            # Save the file to the specified directory
+            fs = FileSystemStorage(location=upload_path)
+            filename = fs.save(resume.name, resume)
+            uploaded_file_url = fs.url(filename)  # Get the URL for the uploaded file
 
-        # Extract text based on file type
-        if resume.name.endswith('.pdf'):
-            text = extract_text_from_pdf(fs.path(filename))
-        elif resume.name.endswith('.docx'):
-            text = extract_text_from_docx(fs.path(filename))
+            # Extract text based on file type
+            if filename.endswith('.pdf'):
+                text = extract_text_from_pdf(fs.path(filename))
+            elif filename.endswith('.docx'):
+                text = extract_text_from_docx(fs.path(filename))
+            else:
+                return render(request, 'resume_screening/upload_page.html', {'upload_message': 'Unsupported file format'})
+
+            # Extract structured resume data
+            extracted_data = extract_resume_data(text)
+
+            # Save structured data into the database
+            try:
+                Resume.objects.create(
+                    name=extracted_data['name'],
+                    email=extracted_data['email'],
+                    phone=extracted_data['phone'],
+                    skills=extracted_data['skills'],
+                    education=extracted_data['education'],
+                    resume_file=filename  # Just save the filename
+                )
+                uploaded_files.append(filename)  # Keep track of successfully uploaded files
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
+        # Set appropriate upload message based on the number of successfully uploaded files
+        if uploaded_files:
+            upload_message = f'{len(uploaded_files)} resume(s) uploaded successfully!'
+            upload_btn_text = "Upload another resume"
         else:
-            return render(request, 'resume_screening/upload_page.html', {'upload_message': 'Unsupported file format', 'upload_btn_text': upload_btn_text})
-
-        # Extract structured resume data
-        extracted_data = extract_resume_data(text)
-
-        # Save structured data into MongoDB (or another storage)
-        try:
-            Resume.objects.create(
-                name=extracted_data['name'],
-                email=extracted_data['email'],
-                phone=extracted_data['phone'],
-                skills=extracted_data['skills'],
-                education=extracted_data['education'],
-                resume_file=filename  # Just the filename, no need for the full path
-            )
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-        # Provide feedback message for successful upload
-        if upload_message == "":
-            upload_message = f'Resume uploaded successfully! Extracted Name: {extracted_data["name"]}'
-            upload_btn_text = "Upload next resume"
-        else:
+            upload_message = "No resumes were uploaded."
             upload_btn_text = "Upload"
-            upload_message = ""
 
     return render(request, 'resume_screening/upload_page.html', {
         'upload_message': upload_message,

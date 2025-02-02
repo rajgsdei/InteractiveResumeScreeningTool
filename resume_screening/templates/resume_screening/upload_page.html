@@ -8,7 +8,7 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <label for="resume">Choose a resume file to upload:</label><br>
-            <input type="file" id="resume" name="resume"><br><br>
+            <input type="file" id="resume" name="resume" multiple><br><br>
             <button type="submit" class="cta-button">{{upload_btn_text}}</button>
         </form>
 
