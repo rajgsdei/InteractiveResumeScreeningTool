@@ -60,7 +60,7 @@
     {% if upload_message %}
     <div class="upload-message">
         <br/>
-        {{ upload_message|safe }}  <!-- 'safe' to render the HTML link -->
+        {{ upload_message|safe }}
     </div>
     {% endif %}
 </section>
@@ -69,7 +69,6 @@
 
 {% block scripts %}
 <script>
-    // Function to handle file selection and extract the data
     document.getElementById('resume').addEventListener('change', function(event) {
         const files = event.target.files;
         const tableBody = document.querySelector('#resumeTable tbody');
@@ -79,15 +78,12 @@
         uploadButton.disabled = true;
         uploadButton.textContent = 'Loading...';
 
-        // Create a FormData object to send the selected files to the backend
         const formData = new FormData();
 
-        // Append each selected file to the FormData object
         for (let i = 0; i < files.length; i++) {
             formData.append('resume', files[i]);
         }
 
-        // Use AJAX to send the FormData to the server
         fetch('/extract-resume-data/', {
             method: 'POST',
             body: formData,
@@ -97,13 +93,11 @@
         })
         .then(response => response.json())
         .then(data => {
-            // If no records were found
             if (noRecordRow && data.length === 0) {
                 noRecordRow.style.display = 'table-row';
             } else {
                 if(noRecordRow) noRecordRow.style.display = 'none';
 
-                // Populate table rows with extracted data
                 data.forEach((resume, index) => {
                     const row = document.createElement('tr');
 

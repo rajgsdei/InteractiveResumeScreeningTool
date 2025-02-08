@@ -10,7 +10,6 @@ from resume_screening.models import Resume
 from sentence_transformers import SentenceTransformer, util
 import re
 
-# Load spaCy model and transformer models
 nlp = spacy.load("en_core_web_sm")
 sentence_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 model_name = "microsoft/DialoGPT-medium"
@@ -27,7 +26,7 @@ PREDEFINED_SKILLS = [
 def chat_assistant(request):
     return render(request, 'resume_screening/chat_assistant.html')
 
-# Function to extract entities using spaCy
+# It extracts entities using spaCy
 def extract_entities(text):
     doc = nlp(text)
     entities = {
@@ -36,25 +35,31 @@ def extract_entities(text):
         'education': None
     }
 
-    # First, handle experience using regex (e.g., "5 years", "5+ years", "more than 5 years")
+    # It handles experience using regex (for eg. "5 years", "5+ years", "more than 5 years")
     # Search for experience-like phrases
     experience_pattern = re.compile(r"(more than|over|under|approximately)?\s*(\d+)\s*(years|yr|yrs)?", re.IGNORECASE)
     experience_match = experience_pattern.search(text)
 
     if experience_match:
         # Extract experience count
-        experience_value = int(experience_match.group(2))  # Get the numeric part (e.g., 5 from "5 years")
+        experience_value = int(experience_match.group(2))
         entities['experience'] = experience_value
 
-    # Now extract entities using spaCy
+    # extracting entities using spaCy here
     for ent in doc.ents:
-        if ent.label_ == "ORG":  # Could be used for institutions or skills
+        if ent.label_ == "ORG":
             entities['education'] = ent.text
 
-    # Manually check for skills based on predefined keywords
+    text_cleaned = re.sub(r'[^\w\s]', '', text.lower())
+
+    found_skills = set()
     for skill in PREDEFINED_SKILLS:
-        if skill.lower() in text.lower():
-            entities['skills'].append(skill)
+        skill_normalized = skill.lower().strip()
+
+        if skill_normalized in text_cleaned.split():
+            found_skills.add(skill)
+
+    entities['skills'] = list(found_skills)
 
     return entities
 
@@ -63,10 +68,9 @@ import string
 
 
 def correct_grammar(query):
-    # Strip punctuation from the query (we keep the question mark for context)
     words = query.split()
 
-    # Remove punctuation from the word before correcting
+    # Removing punctuations from the word before correcting them
     words_no_punctuation = [word.strip(string.punctuation) for word in words]
 
     # Correct grammar for words that are not in the non_correctable_terms list
@@ -75,7 +79,7 @@ def correct_grammar(query):
         for word in words_no_punctuation
     ]
 
-    # Now reattach the punctuation to the corrected words
+    # reattaching the punctuation to the fixed words
     corrected_query = " ".join([f"{word}{words[i][-1] if words[i][-1] in string.punctuation else ''}"
                                 for i, word in enumerate(corrected_words)])
 
@@ -83,79 +87,75 @@ def correct_grammar(query):
 
 
 def classify_intent(query):
-    # Classify into categories: skills, experience, education, combined search
     candidate_labels = ["skills", "experience", "education", "top candidates", "combined search"]
     intent_classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased")
     result = intent_classifier(query, candidate_labels)
 
-    # If the query contains a skill keyword, it's likely a skills-based search
     if any(skill in query.lower() for skill in PREDEFINED_SKILLS):
-        # Check if the query is looking for skills only (no experience mentioned)
-        if "experience" not in query.lower():  # Avoid classifying it as a combined search
+        if "experience" not in query.lower():
             return "skills"
         else:
-            return "combined search"  # If both skills and experience are mentioned
+            return "combined search"
 
-    # If only experience is mentioned, classify as experience search
     if "experience" in query.lower() and not any(skill in query.lower() for skill in PREDEFINED_SKILLS):
         return "experience"
 
-    # Default return if no specific classification fits
     return result['labels'][0]
 
 
 # Function to perform semantic search using Sentence-BERT
 def semantic_search(query, resume_list):
     query_embedding = sentence_model.encode(query, convert_to_tensor=True)
+
     resume_embeddings = [sentence_model.encode(resume.skills, convert_to_tensor=True) for resume in resume_list]
 
     similarities = util.pytorch_cos_sim(query_embedding, resume_embeddings)[0]
+
     sorted_idx = similarities.argsort(descending=True)
+
     return [resume_list[i] for i in sorted_idx]
 
 
 def process_query(query):
-    # Correct any grammatical issues in the query
+    # corrects grammar in case user makes type of grammatical mistakes
     corrected_query = correct_grammar(query)
 
-    # Continue with the corrected query
     query = corrected_query.lower()
 
-    # Intent classification
+    # Getting classification to know which area the query is in like experience, skills etc
     intent = classify_intent(query)
 
-    # Entity extraction for dynamic search
+    # Getting entities like experience, skills value etc
     entities = extract_entities(query)
 
-    # Handle combined search (both skills + experience)
-    if intent == "combined search" and entities['experience'] and entities['skills']:
-        resumes = Resume.objects.filter(
-            experience__gte=entities['experience']
-        ).exclude(experience__isnull=True).filter(
-            Q(skills__contains=entities['skills'])
-        )
-        return resumes
+    if intent in ["skills", "experience", "combined search"]:
+        resumes = None
 
-    elif intent == "combined search" and entities['experience'] is None:
-        resumes = Resume.objects.filter(Q(skills__contains=entities['skills']))
-        return resumes
+        # Handle combined search (both skills + experience)
+        if intent == "combined search" and entities['experience'] and entities['skills']:
+            resumes = Resume.objects.filter(
+                experience__gte=entities['experience']
+            ).exclude(experience__isnull=True).filter(
+                Q(skills__contains=entities['skills'])
+            )
+        elif intent == "combined search" and entities['experience'] is None:
+            resumes = Resume.objects.filter(Q(skills__contains=entities['skills']))
+        elif intent == "experience" and entities['experience']:
+            resumes = Resume.objects.filter(experience__gte=entities['experience']).exclude(experience__isnull=True)
+        elif intent == "skills" and entities['skills']:
+            resumes = Resume.objects.filter(Q(skills__contains=entities['skills']))
+        elif intent == "education" and entities['education']:
+            resumes = Resume.objects.filter(education__icontains=entities['education'])
+        elif intent == "top candidates":
+            resumes = Resume.objects.all().order_by('-experience')[:5]
 
-    # Handle individual intent-based queries
-    elif intent == "experience" and entities['experience']:
-        resumes = Resume.objects.filter(experience__gte=entities['experience']).exclude(experience__isnull=True)
-        return resumes
-    elif intent == "skills" and entities['skills']:
-        resumes = Resume.objects.filter(Q(skills__contains=entities['skills']))
-        return resumes
-    elif intent == "education" and entities['education']:
-        resumes = Resume.objects.filter(education__icontains=entities['education'])
-        return resumes
-    elif intent == "top candidates":
-        resumes = Resume.objects.all().order_by('-experience')[:5]  # top 5 candidates based on experience
-        return resumes
+        if not resumes and (intent == "skills" or intent == "experience"):
+            resume_list = Resume.objects.all()
+            resume_list = semantic_search(query, resume_list)
+            return resume_list
 
+        return resumes
     return None
-
 
 
 
@@ -165,16 +165,13 @@ def chatbot_query(request):
             data = json.loads(request.body)
             query = data.get('query', '')
 
-            # Process the query (including grammar correction) to search for matching resumes
             matching_resumes = process_query(query)
 
-            # Handle conversational response
+
             if not matching_resumes:
-                # Generate a response using the chatbot (DialoGPT)
                 conversation = chatbot(query, max_length=100, num_return_sequences=1)
                 response = conversation[0]['generated_text']
             else:
-                # If we find resumes based on query, display them
                 resume_list = []
                 for resume in matching_resumes:
                     resume_data = {
@@ -200,6 +197,8 @@ def chatbot_query(request):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
+
+
 @csrf_exempt
 def chatbot_response(request):
     if request.method == "POST":
@@ -208,10 +207,8 @@ def chatbot_response(request):
         if not user_input:
             return JsonResponse({'error': 'No input provided'}, status=400)
 
-        # Intent classification
         intent = classify_intent(user_input)
 
-        # Entity extraction
         entities = extract_entities(user_input)
 
         if intent == "skills":
@@ -228,7 +225,6 @@ def chatbot_response(request):
             response = f"Found {len(resumes)} candidates with 5 or more years of experience."
             return JsonResponse({'response': response})
 
-        # Use transformer model for more natural conversation responses
         conversation = chatbot(user_input)
         response = conversation[0]['generated_text']
 

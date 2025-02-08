@@ -117,17 +117,14 @@
 
 {% block content %}
   <div id="chat-container">
-    <!-- Chat messages will be appended here -->
     <div id="chat-box">
       <div id="chat-output"></div>
     </div>
 
-    <!-- Loader (hidden initially) -->
     <div id="loader"></div>
 
-    <!-- User Input Section with button on the right -->
     <div class="input-container">
-      <input type="text" id="user-input" value="5 years experience" placeholder="Ask about resumes..." />
+      <input type="text" id="user-input" placeholder="Ask about resumes..." />
       <button id="send-btn" title="Send">Send</button>
     </div>
   </div>
@@ -138,19 +135,18 @@
       if (userInput) {
         appendMessage("You", userInput, "user-message");
         sendQuery(userInput);
-        document.getElementById("user-input").value = ""; // Clear input field after send
+        document.getElementById("user-input").value = "";
       }
     });
 
-    // Trigger send on 'Enter' key press
     document.getElementById("user-input").addEventListener("keypress", function(event) {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent default enter behavior (e.g., form submission)
+        event.preventDefault();
         var userInput = document.getElementById("user-input").value;
         if (userInput) {
           appendMessage("You", userInput, "user-message");
           sendQuery(userInput);
-          document.getElementById("user-input").value = ""; // Clear input field after send
+          document.getElementById("user-input").value = "";
         }
       }
     });
@@ -161,7 +157,6 @@
       messageElement.innerHTML = `<b>${sender}: </b> ${message}`;
       document.getElementById("chat-output").appendChild(messageElement);
 
-      // Scroll to the bottom of the chat box
       document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
     }
 
@@ -173,7 +168,6 @@
         return;
       }
 
-      // Show loader while processing the query
       document.getElementById("loader").style.display = "block";
 
       fetch("/chatbot_query/", {
@@ -186,10 +180,9 @@
       })
       .then(response => response.json())
       .then(data => {
-        // Hide loader once the response is received
         document.getElementById("loader").style.display = "none";
 
-        if(data.error){
+        if(data.error || data?.error == ''){
           throw data.error;
         }
 
@@ -212,7 +205,6 @@
         }
       })
       .catch(error => {
-        // Hide loader in case of error
         document.getElementById("loader").style.display = "none";
 
         console.error("Error:", error);

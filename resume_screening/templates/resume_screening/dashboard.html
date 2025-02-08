@@ -30,7 +30,7 @@
     </div>
 </div>
 
-<!-- Hiring Status Pie Chart -->
+
 <div class="each-row">
     <div class="chart-container">
         <canvas id="hiringStatusChart" width="400" height="400"></canvas>
@@ -41,7 +41,7 @@
     </div>
 </div>
 
-<!-- Score Distribution Bar Chart -->
+
 <div class="each-row">
     <div class="chart-container">
         <canvas id="scoreChart" width="400" height="400"></canvas>
@@ -58,17 +58,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// Fetch dashboard data via AJAX
 fetch('/api/dashboard-data/')
     .then(response => response.json())
     .then(data => {
-        // Update statistics in the page
         document.getElementById('total-resumes').textContent = data.total_resumes;
         document.getElementById('hired').textContent = data.hiring_status_data.Hired;
         document.getElementById('rejected').textContent = data.hiring_status_data.Rejected;
         document.getElementById('pending').textContent = data.hiring_status_data.Pending;
 
-        // Chart.js for Hiring Status Distribution (Pie Chart)
         const ctxHiringStatus = document.getElementById('hiringStatusChart').getContext('2d');
         const hiringStatusChart = new Chart(ctxHiringStatus, {
             type: 'pie',
@@ -84,7 +81,6 @@ fetch('/api/dashboard-data/')
             }
         });
 
-        // Chart.js for Experience Distribution (Bar Chart)
         const ctxExperience = document.getElementById('experienceChart').getContext('2d');
         const experienceChart = new Chart(ctxExperience, {
             type: 'bar',
@@ -100,7 +96,6 @@ fetch('/api/dashboard-data/')
             }
         });
 
-        // Chart.js for Score Distribution (Bar Chart)
         const ctxScore = document.getElementById('scoreChart').getContext('2d');
         const scoreChart = new Chart(ctxScore, {
             type: 'bar',
@@ -116,7 +111,6 @@ fetch('/api/dashboard-data/')
             }
         });
 
-        // Chart.js for Skills Distribution (Bar Chart)
         const ctxSkills = document.getElementById('skillsChart').getContext('2d');
         const skillsChart = new Chart(ctxSkills, {
             type: 'bar',
