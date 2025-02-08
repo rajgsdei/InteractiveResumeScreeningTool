@@ -1,0 +1,138 @@
+{% block style %}
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+<style>
+    h1 {
+        margin-top: 0 !important;
+    }
+    .each-row {
+        display: flex;
+        justify-content: center;
+        gap: 10%;
+    }
+    .chart-container {
+        width: 500px;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Candidate Dashboard</h1>
+
+<div class="statistics">
+    <div class="stat-item">
+        <h4>Total Resumes: <span id="total-resumes"></span></h4>
+    </div>
+    <div class="stat-item">
+        <h4>Hired: <span id="hired"></span></h4>
+        <h4>Rejected: <span id="rejected"></span></h4>
+        <h4>Pending: <span id="pending"></span></h4>
+    </div>
+</div>
+
+<!-- Hiring Status Pie Chart -->
+<div class="each-row">
+    <div class="chart-container">
+        <canvas id="hiringStatusChart" width="400" height="400"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="experienceChart" width="400" height="400"></canvas>
+    </div>
+</div>
+
+<!-- Score Distribution Bar Chart -->
+<div class="each-row">
+    <div class="chart-container">
+        <canvas id="scoreChart" width="400" height="400"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="skillsChart" width="400" height="400"></canvas>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Fetch dashboard data via AJAX
+fetch('/api/dashboard-data/')
+    .then(response => response.json())
+    .then(data => {
+        // Update statistics in the page
+        document.getElementById('total-resumes').textContent = data.total_resumes;
+        document.getElementById('hired').textContent = data.hiring_status_data.Hired;
+        document.getElementById('rejected').textContent = data.hiring_status_data.Rejected;
+        document.getElementById('pending').textContent = data.hiring_status_data.Pending;
+
+        // Chart.js for Hiring Status Distribution (Pie Chart)
+        const ctxHiringStatus = document.getElementById('hiringStatusChart').getContext('2d');
+        const hiringStatusChart = new Chart(ctxHiringStatus, {
+            type: 'pie',
+            data: {
+                labels: ['Hired', 'Rejected', 'Pending'],
+                datasets: [{
+                    label: 'Hiring Status',
+                    data: [data.hiring_status_data.Hired, data.hiring_status_data.Rejected, data.hiring_status_data.Pending],
+                    backgroundColor: ['#4CAF50', '#F44336', '#FFEB3B'],
+                    borderColor: '#FFF',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // Chart.js for Experience Distribution (Bar Chart)
+        const ctxExperience = document.getElementById('experienceChart').getContext('2d');
+        const experienceChart = new Chart(ctxExperience, {
+            type: 'bar',
+            data: {
+                labels: data.experience_labels,
+                datasets: [{
+                    label: 'Experience Distribution',
+                    data: data.experience_values,
+                    backgroundColor: '#4CAF50',
+                    borderColor: '#FFF',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // Chart.js for Score Distribution (Bar Chart)
+        const ctxScore = document.getElementById('scoreChart').getContext('2d');
+        const scoreChart = new Chart(ctxScore, {
+            type: 'bar',
+            data: {
+                labels: data.score_labels,
+                datasets: [{
+                    label: 'Score Distribution',
+                    data: data.score_values,
+                    backgroundColor: '#2196F3',
+                    borderColor: '#FFF',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // Chart.js for Skills Distribution (Bar Chart)
+        const ctxSkills = document.getElementById('skillsChart').getContext('2d');
+        const skillsChart = new Chart(ctxSkills, {
+            type: 'bar',
+            data: {
+                labels: data.skill_labels,
+                datasets: [{
+                    label: 'Skills Distribution',
+                    data: data.skill_values,
+                    backgroundColor: '#FFEB3B',
+                    borderColor: '#FFF',
+                    borderWidth: 1
+                }]
+            }
+        });
+    })
+    .catch(error => console.error('Error fetching data:', error));
+
+</script>
+{% endblock %}

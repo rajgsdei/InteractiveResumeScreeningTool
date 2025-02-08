@@ -1,16 +1,27 @@
 /* styles.css */
-body {
+html, body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+
+main {
+    height: 100%;
+    overflow-y: auto;
+    text-align: center;
+    padding: 0 24px;
 }
 
 header {
-    background-color: #333;
+    background-color: #71a4b6;
     color: white;
     padding: 20px 0;
     text-align: center;
+    height: 80px;
 }
 
 header .logo h1 {
@@ -32,18 +43,14 @@ nav ul li a {
     text-decoration: none;
 }
 
-main {
-    padding: 40px;
-    text-align: center;
-}
-
 .intro {
     background-color: #fff;
     padding: 30px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     margin: 20px auto;
-    max-width: 600px;
+    max-width: 85%;
 }
+
 
 button {
     display: inline-block;
@@ -63,9 +70,9 @@ button:hover {
 
 footer {
     text-align: center;
-    background-color: #333;
+    background-color: #71a4b6;
     color: white;
-    padding: 10px 0;
+    padding: 0;
     position: fixed;
     width: 100%;
     bottom: 0;
@@ -153,7 +160,12 @@ body a {
 }
 
 body a:hover {
-	color: #188181;
+	color: #174949;
+}
+
+nav ul li a.active {
+    font-weight: bold;
+    color: #174949;
 }
 
 button[disabled] {
@@ -195,7 +207,7 @@ select {
     padding: 4px 0px 3px 5px;
 }
 
-section {
-	margin-bottom: 42px;
-	padding-bottom: 28px;
+section, .chart-section {
+	padding-bottom: 200px;
 }
+
