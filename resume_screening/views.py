@@ -4,6 +4,12 @@ import pdfplumber
 import docx
 import traceback
 import random
+from django.http import JsonResponse
+from .models import Resume
+import re
+import random
+import json
+from django.db.models import Q
 
 from .utilities.save_file import save_uploaded_file
 from .utilities.extract_features import extract_resume_data
@@ -145,3 +151,61 @@ def upload(request):
         'upload_btn_text': upload_btn_text,
         'all_resumes': all_resumes
     })
+
+def chat_assistant(request):
+    return render(request, 'resume_screening/chat_assistant.html')
+
+def process_query(query):
+    # Simple keyword-based search example (could be extended with NLP tools)
+    query = query.lower()
+
+    if "python" in query and "django" in query:
+        resumes = Resume.objects.filter(
+            Q(skills__icontains="Python") & Q(skills__icontains="Django")
+        )
+        return resumes
+    elif "experience" in query:
+        years = re.search(r"(\d+)", query)
+        if years:
+            years = int(years.group(1))
+            resumes = Resume.objects.filter(experience__gte=years)
+            return resumes
+    elif "education" in query:
+        education_level = "Master" if "Master" in query else "Bachelor"
+        resumes = Resume.objects.filter(education__icontains=education_level)
+        return resumes
+
+    # Default response when no condition matches
+    return None
+
+
+def chatbot_query(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        query = data.get('query', '')
+
+        # Process the query (simplified version)
+        matching_resumes = process_query(query)
+
+        if matching_resumes:
+            resume_list = []
+            for resume in matching_resumes:
+                resume_data = {
+                    'name': resume.name,
+                    'email': resume.email,
+                    'skills': resume.skills,
+                    'experience': resume.experience,
+                    'education': resume.education,
+                }
+                resume_list.append(resume_data)
+
+            response = {
+                'response': f"Found {len(matching_resumes)} matching resumes.",
+                'resumes': resume_list
+            }
+        else:
+            response = {'response': "Sorry, I couldn't find any resumes matching your query."}
+
+        return JsonResponse(response)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
