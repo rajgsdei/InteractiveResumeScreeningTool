@@ -36,3 +36,74 @@ And finally the Chat assistant which is the core and growing feature of the appl
 - An AI-driven chat assistant that can interact with users by processing their queries.
 - Uses NLP for intent classification (skills, experience, education, etc.) and can correct grammatical errors in the queries.
 - Offers the ability to filter resumes based on skills, experience, or education, and allows semantic search to find resumes based on content similarity.
+
+### Technologies Used:
+- **Backend Framework:** Django
+- **Database:** MongoDB (using Djongo for compatibility)
+- **NLP and Machine Learning Libraries:** spaCy, TextBlob, Hugging Face Transformers, Sentence-Transformers, and others.
+- **Frontend:** HTML, CSS (for templating in Django)
+- **Document Processing:** pdfplumber, python-docx
+- **Others:** Pypdfium2, PyYAML, and various supporting libraries for tasks like file handling and data visualization.
+
+
+### Installation and Setup: 
+Follow these steps to set up and run the **Interactive Resume Screening** project on your local machine:
+
+#### Prerequisites:
+- Python 3.x
+- MongoDB (Running locally or using a cloud service)
+- pip (Python package manager)
+
+
+> [!NOTE]
+> There is a DB file for SQLite but it is not needed for this project and its dependacies can be ignored.
+
+#### Steps:
+1. **Clone the Repository:**
+   
+   ```
+   git clone https://github.com/yourusername/interactive-resume-screening.git
+   cd interactive-resume-screening
+   ```
+3. **Create a Virtual Environment:**
+   
+   ```
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+4. **Install Dependencies:**
+   
+   ```
+   pip install -r requirements.txt
+   ```
+5. **Configure MongoDB:**
+   
+   - Ensure that MongoDB is installed and running on your local machine or use a MongoDB cloud instance.
+   - In the project, MongoDB is integrated using Djongo, so you don't need to configure a separate connection string.
+
+5. **Run Migrations:**
+   
+   ```
+   python manage.py migrate
+   ```
+7. **Create a Superuser (Optional):**
+   
+   ```
+   python manage.py createsuperuser
+   ```
+8. **Create a Superuser (Optional):**
+   
+   ```
+   python manage.py runserver
+   ```
+9. **Create a Superuser (Optional):**
+   
+   ```
+   python manage.py runserver
+   ```
+10. **Run the Server:**
+    
+   ```
+   python manage.py runserver
+   http://127.0.0.1:8000/
+   ```
