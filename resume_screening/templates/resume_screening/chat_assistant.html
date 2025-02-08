@@ -1,12 +1,118 @@
 {% extends 'resume_screening/base.html' %}
 
+{% block meta %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block title %}Chat Assistant{% endblock %}
+
 {% block style %}
   <style>
-  #user-input{
-      height: 34px;
-    width: 500px;
-  }
-</style>
+    /* Basic Layout */
+    #chat-container {
+      width: 80%;
+      margin: 0 auto;
+      max-width: 70%;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      height: 75%;
+      margin-top: 24px;
+    }
+
+    /* Chat Box */
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 10px;
+      border-radius: 8px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+      padding: 10px;
+    }
+
+    /* Chat Output */
+    #chat-output {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* User and Bot messages */
+    .message {
+      padding: 8px 12px;
+      border-radius: 15px;
+      max-width: 75%;
+      margin: 5px 0;
+    }
+
+    .user-message {
+      background-color: #d1f7d8;
+      align-self: flex-end;
+      color: #333;
+    }
+
+    .bot-message {
+      background-color: #e7e7e7;
+      align-self: flex-start;
+      color: #333;
+    }
+
+    /* Input and Button */
+    .input-container {
+      width: 100%;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      height: 40px;
+      box-sizing: border-box;
+      width: 90%;
+    }
+
+    #send-btn {
+      background-color: #71a4b6;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      min-width: 50px;
+      text-align: center;
+      height: 40px;
+    }
+
+    #send-btn:hover {
+      background-color: #188181;
+    }
+
+    /* Loader Style */
+    #loader {
+      display: none; /* Hidden by default */
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+
+    /* Animation for the spinner */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -14,41 +120,95 @@
     <div id="chat-box">
       <div id="chat-output"></div>
     </div>
-    <input type="text" id="user-input" placeholder="Ask about resumes..." />
-    <button id="send-btn">Send</button>
+
+    <div id="loader"></div>
+
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Ask about resumes..." />
+      <button id="send-btn" title="Send">Send</button>
+    </div>
   </div>
 
   <script>
     document.getElementById("send-btn").addEventListener("click", function() {
       var userInput = document.getElementById("user-input").value;
       if (userInput) {
-        appendMessage("User", userInput);
+        appendMessage("You", userInput, "user-message");
         sendQuery(userInput);
+        document.getElementById("user-input").value = "";
       }
     });
 
-    function appendMessage(sender, message) {
+    document.getElementById("user-input").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        var userInput = document.getElementById("user-input").value;
+        if (userInput) {
+          appendMessage("You", userInput, "user-message");
+          sendQuery(userInput);
+          document.getElementById("user-input").value = "";
+        }
+      }
+    });
+
+    function appendMessage(sender, message, messageType) {
       const messageElement = document.createElement("div");
+      messageElement.classList.add("message", messageType);
       messageElement.innerHTML = `<b>${sender}: </b> ${message}`;
       document.getElementById("chat-output").appendChild(messageElement);
+
+      document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
     }
 
     function sendQuery(query) {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+      if (!csrfToken) {
+        console.error("CSRF token not found!");
+        return;
+      }
+
+      document.getElementById("loader").style.display = "block";
+
       fetch("/chatbot_query/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]')?.value
+          "X-CSRFToken": csrfToken
         },
         body: JSON.stringify({ query: query })
       })
       .then(response => response.json())
       .then(data => {
-        appendMessage("Bot", data.response);
+        document.getElementById("loader").style.display = "none";
+
+        if(data.error || data?.error == ''){
+          throw data.error;
+        }
+
+        appendMessage("Assistant", data.response, "bot-message");
+
+        if (data.resumes && !data.error) {
+            data.resumes.forEach(function(resume) {
+                const resumeElement = document.createElement("div");
+                resumeElement.classList.add("message", "bot-message");
+
+                resumeElement.innerHTML = `
+                    <strong>Name:</strong> ${resume.name || 'Not available'} |
+                    <strong>Skills:</strong> ${resume.skills && resume.skills.length ? resume.skills.join(', ') : 'Not available'} |
+                    <strong>Experience:</strong> ${resume.experience ? (resume.experience + 'years') : 'Not available'} |
+                    <a href='/candidate-profile/${resume.id}/' target='_blank'>View Profile</a>
+                `;
+
+                document.getElementById("chat-output").appendChild(resumeElement);
+            });
+        }
       })
       .catch(error => {
+        document.getElementById("loader").style.display = "none";
+
         console.error("Error:", error);
-        appendMessage("Bot", "Sorry, I couldn't understand that.");
+        appendMessage("Assistant", "Sorry, I couldn't find anything. Please try again!", "bot-message");
       });
     }
   </script>

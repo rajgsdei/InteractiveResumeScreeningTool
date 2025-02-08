@@ -1,8 +1,8 @@
-{% extends 'resume_screening/base.html' %}  <!-- Extend the base.html template -->
+{% extends 'resume_screening/base.html' %}
 
 {% load static %}
 
-{% block title %}Resume Screening Tool{% endblock %}
+{% block title %}View Resume{% endblock %}
 
 {% block style %}
 <link href="{% static 'styles/view_resumes.css' %}" rel="stylesheet">
@@ -72,7 +72,6 @@
         {% endif %}
     </div>
 </section>
-<!-- Modal for "See More" Content -->
 <div class="see-more-content" id="see-more-modal">
     <p id="see-more-text"></p>
     <button onclick="closeModal()">Close</button>
@@ -84,7 +83,7 @@
 
 {% block scripts %}
 <script>
-    // Show modal for long content
+    // it shoes the modal
     document.querySelectorAll('.see-more-btn').forEach(function(button) {
         button.addEventListener('click', function() {
             var content = this.getAttribute('data-content');
@@ -94,7 +93,7 @@
         });
     });
 
-    // Close the modal
+    // it closes the modal
     function closeModal() {
         document.getElementById('see-more-modal').style.display = 'none';
         document.getElementById('overlay').style.display = 'none';

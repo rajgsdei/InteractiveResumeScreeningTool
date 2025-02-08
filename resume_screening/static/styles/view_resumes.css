@@ -1,6 +1,3 @@
-
-
-
 .see-more-btn {
 	color: #71a4b6;
 	cursor: pointer;
@@ -43,6 +40,16 @@
 }
 
 .see-more-content button:hover {
+	background-color: #188181;
+}
+
+.button {
+	background-color: #71a4b6;
+	color: white;
+	border-radius: 5px;
+}
+
+.button:hover {
 	background-color: #188181;
 }
 
