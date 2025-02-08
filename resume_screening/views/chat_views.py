@@ -36,7 +36,6 @@ def extract_entities(text):
     }
 
     # It handles experience using regex (for eg. "5 years", "5+ years", "more than 5 years")
-    # Search for experience-like phrases
     experience_pattern = re.compile(r"(more than|over|under|approximately)?\s*(\d+)\s*(years|yr|yrs)?", re.IGNORECASE)
     experience_match = experience_pattern.search(text)
 
