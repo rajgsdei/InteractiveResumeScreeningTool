@@ -20,7 +20,7 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
-      height: 550px;
+      height: 75%;
       margin-top: 24px;
     }
 
@@ -33,7 +33,6 @@
       border-radius: 8px;
       box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
       padding: 10px;
-      max-height: 400px;
     }
 
     /* Chat Output */
@@ -95,6 +94,24 @@
     #send-btn:hover {
       background-color: #188181;
     }
+
+    /* Loader Style */
+    #loader {
+      display: none; /* Hidden by default */
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+
+    /* Animation for the spinner */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 {% endblock %}
 
@@ -104,6 +121,9 @@
     <div id="chat-box">
       <div id="chat-output"></div>
     </div>
+
+    <!-- Loader (hidden initially) -->
+    <div id="loader"></div>
 
     <!-- User Input Section with button on the right -->
     <div class="input-container">
@@ -116,7 +136,7 @@
     document.getElementById("send-btn").addEventListener("click", function() {
       var userInput = document.getElementById("user-input").value;
       if (userInput) {
-        appendMessage("User", userInput, "user-message");
+        appendMessage("You", userInput, "user-message");
         sendQuery(userInput);
         document.getElementById("user-input").value = ""; // Clear input field after send
       }
@@ -128,7 +148,7 @@
         event.preventDefault(); // Prevent default enter behavior (e.g., form submission)
         var userInput = document.getElementById("user-input").value;
         if (userInput) {
-          appendMessage("User", userInput, "user-message");
+          appendMessage("You", userInput, "user-message");
           sendQuery(userInput);
           document.getElementById("user-input").value = ""; // Clear input field after send
         }
@@ -153,6 +173,9 @@
         return;
       }
 
+      // Show loader while processing the query
+      document.getElementById("loader").style.display = "block";
+
       fetch("/chatbot_query/", {
         method: "POST",
         headers: {
@@ -163,18 +186,24 @@
       })
       .then(response => response.json())
       .then(data => {
-        appendMessage("Bot", data.response, "bot-message");
+        // Hide loader once the response is received
+        document.getElementById("loader").style.display = "none";
 
-        if (data.resumes) {
+        if(data.error){
+          throw data.error;
+        }
+
+        appendMessage("Assistant", data.response, "bot-message");
+
+        if (data.resumes && !data.error) {
             data.resumes.forEach(function(resume) {
                 const resumeElement = document.createElement("div");
                 resumeElement.classList.add("message", "bot-message");
 
                 resumeElement.innerHTML = `
-                    <strong>Name:</strong> ${resume.name} |
-                    <strong>Skills:</strong> ${resume.skills.join(', ')} |
-                    <strong>Experience:</strong> ${resume.experience} years |
-                    <strong>Education:</strong> ${resume.education} |
+                    <strong>Name:</strong> ${resume.name || 'Not available'} |
+                    <strong>Skills:</strong> ${resume.skills && resume.skills.length ? resume.skills.join(', ') : 'Not available'} |
+                    <strong>Experience:</strong> ${resume.experience ? (resume.experience + 'years') : 'Not available'} |
                     <a href='/candidate-profile/${resume.id}/' target='_blank'>View Profile</a>
                 `;
 
@@ -183,8 +212,11 @@
         }
       })
       .catch(error => {
+        // Hide loader in case of error
+        document.getElementById("loader").style.display = "none";
+
         console.error("Error:", error);
-        appendMessage("Bot", "Sorry, I couldn't understand that.", "bot-message");
+        appendMessage("Assistant", "Sorry, I couldn't find anything. Please try again!", "bot-message");
       });
     }
   </script>

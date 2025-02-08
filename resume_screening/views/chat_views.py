@@ -2,11 +2,13 @@ from django.http import JsonResponse
 from django.shortcuts import render
 import json
 import spacy
+from textblob import TextBlob
 from django.views.decorators.csrf import csrf_exempt
 from transformers import pipeline
 from django.db.models import Q
 from resume_screening.models import Resume
 from sentence_transformers import SentenceTransformer, util
+import re
 
 # Load spaCy model and transformer models
 nlp = spacy.load("en_core_web_sm")
@@ -15,6 +17,12 @@ model_name = "microsoft/DialoGPT-medium"
 
 # Create a pipeline for text generation using the DialoGPT model
 chatbot = pipeline("text-generation", model=model_name, tokenizer=model_name)
+
+PREDEFINED_SKILLS = [
+    "python", "java", "javascript", "django", "react", "flask",
+    "sql", "html", "css", "aws", "azure", "machine learning",
+    "deep learning", "data science", "c++", "git", "linux", "docker", "c#", ".net", "dotnet", "ai", "ml"
+]
 
 def chat_assistant(request):
     return render(request, 'resume_screening/chat_assistant.html')
@@ -28,22 +36,73 @@ def extract_entities(text):
         'education': None
     }
 
+    # First, handle experience using regex (e.g., "5 years", "5+ years", "more than 5 years")
+    # Search for experience-like phrases
+    experience_pattern = re.compile(r"(more than|over|under|approximately)?\s*(\d+)\s*(years|yr|yrs)?", re.IGNORECASE)
+    experience_match = experience_pattern.search(text)
+
+    if experience_match:
+        # Extract experience count
+        experience_value = int(experience_match.group(2))  # Get the numeric part (e.g., 5 from "5 years")
+        entities['experience'] = experience_value
+
+    # Now extract entities using spaCy
     for ent in doc.ents:
-        if ent.label_ == "CARDINAL":  # Experience in years
-            entities['experience'] = int(ent.text)
-        elif ent.label_ == "ORG":  # Could be used for institutions or skills
+        if ent.label_ == "ORG":  # Could be used for institutions or skills
             entities['education'] = ent.text
-        elif ent.label_ == "SKILL":  # For skills (this could be customized)
-            entities['skills'].append(ent.text)
+
+    # Manually check for skills based on predefined keywords
+    for skill in PREDEFINED_SKILLS:
+        if skill.lower() in text.lower():
+            entities['skills'].append(skill)
 
     return entities
 
 
+import string
+
+
+def correct_grammar(query):
+    # Strip punctuation from the query (we keep the question mark for context)
+    words = query.split()
+
+    # Remove punctuation from the word before correcting
+    words_no_punctuation = [word.strip(string.punctuation) for word in words]
+
+    # Correct grammar for words that are not in the non_correctable_terms list
+    corrected_words = [
+        str(TextBlob(word).correct()) if word.lower() not in PREDEFINED_SKILLS else word
+        for word in words_no_punctuation
+    ]
+
+    # Now reattach the punctuation to the corrected words
+    corrected_query = " ".join([f"{word}{words[i][-1] if words[i][-1] in string.punctuation else ''}"
+                                for i, word in enumerate(corrected_words)])
+
+    return corrected_query
+
+
 def classify_intent(query):
-    candidate_labels = ["skills", "experience", "education", "top candidates"]
-    intent_classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+    # Classify into categories: skills, experience, education, combined search
+    candidate_labels = ["skills", "experience", "education", "top candidates", "combined search"]
+    intent_classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased")
     result = intent_classifier(query, candidate_labels)
-    return result['labels'][0]  # Choose the label with highest score
+
+    # If the query contains a skill keyword, it's likely a skills-based search
+    if any(skill in query.lower() for skill in PREDEFINED_SKILLS):
+        # Check if the query is looking for skills only (no experience mentioned)
+        if "experience" not in query.lower():  # Avoid classifying it as a combined search
+            return "skills"
+        else:
+            return "combined search"  # If both skills and experience are mentioned
+
+    # If only experience is mentioned, classify as experience search
+    if "experience" in query.lower() and not any(skill in query.lower() for skill in PREDEFINED_SKILLS):
+        return "experience"
+
+    # Default return if no specific classification fits
+    return result['labels'][0]
+
 
 # Function to perform semantic search using Sentence-BERT
 def semantic_search(query, resume_list):
@@ -54,9 +113,13 @@ def semantic_search(query, resume_list):
     sorted_idx = similarities.argsort(descending=True)
     return [resume_list[i] for i in sorted_idx]
 
-# Process the user query and return matching resumes
+
 def process_query(query):
-    query = query.lower()
+    # Correct any grammatical issues in the query
+    corrected_query = correct_grammar(query)
+
+    # Continue with the corrected query
+    query = corrected_query.lower()
 
     # Intent classification
     intent = classify_intent(query)
@@ -64,26 +127,37 @@ def process_query(query):
     # Entity extraction for dynamic search
     entities = extract_entities(query)
 
-    # Handle intent-based queries
-    if intent == "experience":
-        if entities['experience']:
-            resumes = Resume.objects.filter(experience__gte=entities['experience'])
-            return resumes
-    elif intent == "skills":
-        if entities['skills']:
-            resumes = Resume.objects.filter(
-                Q(skills__contains=entities['skills'])
-            )
-            return resumes
-    elif intent == "education":
-        if entities['education']:
-            resumes = Resume.objects.filter(education__icontains=entities['education'])
-            return resumes
+    # Handle combined search (both skills + experience)
+    if intent == "combined search" and entities['experience'] and entities['skills']:
+        resumes = Resume.objects.filter(
+            experience__gte=entities['experience']
+        ).exclude(experience__isnull=True).filter(
+            Q(skills__contains=entities['skills'])
+        )
+        return resumes
+
+    elif intent == "combined search" and entities['experience'] is None:
+        resumes = Resume.objects.filter(Q(skills__contains=entities['skills']))
+        return resumes
+
+    # Handle individual intent-based queries
+    elif intent == "experience" and entities['experience']:
+        resumes = Resume.objects.filter(experience__gte=entities['experience']).exclude(experience__isnull=True)
+        return resumes
+    elif intent == "skills" and entities['skills']:
+        resumes = Resume.objects.filter(Q(skills__contains=entities['skills']))
+        return resumes
+    elif intent == "education" and entities['education']:
+        resumes = Resume.objects.filter(education__icontains=entities['education'])
+        return resumes
     elif intent == "top candidates":
         resumes = Resume.objects.all().order_by('-experience')[:5]  # top 5 candidates based on experience
         return resumes
 
-    return None  # Default fallback
+    return None
+
+
+
 
 def chatbot_query(request):
     if request.method == 'POST':
@@ -91,7 +165,7 @@ def chatbot_query(request):
             data = json.loads(request.body)
             query = data.get('query', '')
 
-            # Process the query to search for matching resumes (using NLP)
+            # Process the query (including grammar correction) to search for matching resumes
             matching_resumes = process_query(query)
 
             # Handle conversational response
@@ -108,8 +182,7 @@ def chatbot_query(request):
                         'name': resume.name,
                         'email': resume.email,
                         'skills': resume.skills,
-                        'experience': resume.experience,
-                        'education': resume.education,
+                        'experience': resume.experience
                     }
                     resume_list.append(resume_data)
 
