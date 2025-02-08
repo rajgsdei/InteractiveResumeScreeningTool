@@ -38,7 +38,7 @@ def extract_entities(text):
 
     return entities
 
-# Function to classify intents based on user input
+
 def classify_intent(query):
     candidate_labels = ["skills", "experience", "education", "top candidates"]
     intent_classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
