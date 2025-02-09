@@ -6,6 +6,8 @@ Built using **Django** as the backend framework, the system integrates **MongoDB
 
 ## System Description
 
+![diagram-export-2-9-2025-12_09_52-PM](https://github.com/user-attachments/assets/929e947a-46ad-4337-a4f3-ac00f44a0cb3)
+
 ### Features:
 #### 1. Home Page:
 
@@ -45,8 +47,33 @@ And finally the Chat assistant which is the core and growing feature of the appl
 - **Document Processing:** pdfplumber, python-docx
 - **Others:** Pypdfium2, PyYAML, and various supporting libraries for tasks like file handling and data visualization.
 
+## Demo
+I am sharing some of the screenshots from the application here. 
+>[!IMPORTANT]
+>Currently the chatbot processes the user input as a human language using NLP model and converts into query. It can also accept grammatically incorrect syntaxes, typo.
+>However I will keep adding more feateues into it like RAG, Vector embedding, LLM etc.
 
-### Installation and Setup: 
+1. **Home page**
+![image](https://github.com/user-attachments/assets/98e31632-c394-43f5-8db0-03142d8eba5f)
+
+2. **Upload resume (s)**
+![image](https://github.com/user-attachments/assets/863a417a-3c36-4917-8528-dd30d59850d4)
+
+3. **View resume list**
+![image](https://github.com/user-attachments/assets/d6f8830a-6c49-4bf8-b299-dd102039a092)
+
+4. **Chat assistant**
+
+- **Search in simple human language**
+![image](https://github.com/user-attachments/assets/2f710728-9ec8-4264-85e8-82ec19c30973)
+- **It still shows result if searching with typo**
+![image](https://github.com/user-attachments/assets/c734ea40-7e4b-463e-bb60-a74db35242b6)
+
+
+
+
+
+## Installation and Setup: 
 Follow these steps to set up and run the **Interactive Resume Screening** project on your local machine:
 
 #### Prerequisites:
