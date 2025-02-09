@@ -16,5 +16,6 @@ urlpatterns = [
     path('chatbot_query/', chatbot_query, name='chatbot_query'),
     path('candidate-profile/<uuid:resume_id>/', views.candidate_profile, name='candidate_profile'),
     path('api/dashboard-data/', dashboard_data, name='dashboard_data'),
+    path('edit-resume/', views.edit_resume, name='edit_resume'),
 ]
 

@@ -2,7 +2,7 @@ from djongo import models
 import uuid
 
 class Resume(models.Model):
-    resume_id = models.CharField(max_length=255, unique=True, default=uuid.uuid4, editable=False)
+    resume_id = models.CharField(max_length=255, unique=True, default=uuid.uuid4, editable=False, primary_key=True)
     name = models.CharField(max_length=255)
     email = models.EmailField()
     phone = models.CharField(max_length=20)

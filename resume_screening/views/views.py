@@ -80,6 +80,35 @@ def view_resumes(request):
         error_message = traceback.format_exc()
         return HttpResponse(f"Database connection failed: {error_message}")
 
+def edit_resume(request):
+    if request.method == 'POST':
+        resume_id = request.POST.get('id')
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        skills = request.POST.get('skills').split(',')  # Assuming skills are passed as comma-separated
+        experience = request.POST.get('experience')
+        current_ctc = request.POST.get('current_ctc')
+        education = request.POST.get('education')
+        applied_for = request.POST.get('applied_for')
+
+        try:
+            resume = Resume.objects.get(resume_id=resume_id)
+            resume.name = name
+            resume.email = email
+            resume.phone = phone
+            resume.skills = skills
+            resume.experience = 0 if experience == "" else float(experience)
+            resume.current_ctc = 0 if current_ctc == "" else float(current_ctc)
+            resume.education = education
+            resume.applied_for = applied_for
+            resume.save()
+
+            return JsonResponse({'success': True})
+        except Resume.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Resume not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
 
 def upload(request):
     upload_message = ""

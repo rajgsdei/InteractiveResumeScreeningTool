@@ -41,13 +41,15 @@
                     <td>{{ resume.expected_ctc }}</td>
                     <td>
                         {% if resume.education|length > 50 %}
-                        {{ resume.education|slice:":50" }}... <br/><span class="see-more-btn"
-                                                                         data-content="{{ resume.education }}">See More</span>
+                        {{ resume.education|slice:":50" }}... <br/><span class="see-more-btn"                                                                          data-content="{{ resume.education }}">See More</span>
                         {% else %}
                         {{ resume.education }}
                         {% endif %}
                     </td>
-                    <td><a href="{{ MEDIA_URL }}resume/{{ resume.resume_file }}" target="_blank">Download</a></td>
+                    <td>
+                        <button class="edit-btn" data-id="{{ resume.resume_id }}" data-name="{{ resume.name }}" data-email="{{ resume.email }}" data-phone="{{ resume.phone }}" data-skills="{{ resume.skills|join:', ' }}" data-experience="{{ resume.experience }}" data-ctc="{{ resume.current_ctc }}" data-education="{{ resume.education }}" data-applied-for="{{ resume.applied_for }}">Edit</button>
+                        <a href="{{ MEDIA_URL }}resume/{{ resume.resume_file }}" target="_blank">Download</a>
+                    </td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -77,6 +79,55 @@
     <button onclick="closeModal()">Close</button>
 </div>
 
+
+<div id="edit-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeEditModal()">&times;</span>
+        <h3 class="header-text">Edit Candidate Information</h3>
+        <form id="edit-resume-form" method="POST">
+            {% csrf_token %}
+            <input type="hidden" id="edit-resume-id" name="id">
+            <table>
+                <tr>
+                    <td><label for="edit-name">Name</label></td>
+                    <td><input type="text" id="edit-name" name="name" class="edit-input" required></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-email">Email</label></td>
+                    <td><input type="email" id="edit-email" name="email" class="edit-input" required></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-phone">Phone</label></td>
+                    <td><input type="text" id="edit-phone" name="phone" class="edit-input" required></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-skills">Skills</label></td>
+                    <td><input type="text" id="edit-skills" name="skills" class="edit-input"></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-experience">Experience</label></td>
+                    <td><input type="number" id="edit-experience" name="experience" class="edit-input"></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-ctc">Current CTC</label></td>
+                    <td><input type="number" id="edit-ctc" name="current_ctc" class="edit-input"></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-education">Education</label></td>
+                    <td><input type="text" id="edit-education" name="education" class="edit-input"></td>
+                </tr>
+                <tr>
+                    <td><label for="edit-applied-for">Applied For</label></td>
+                    <td><input type="text" id="edit-applied-for" name="applied_for" class="edit-input" required></td>
+                </tr>
+            </table>
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+
+
 <div class="overlay" id="overlay" style="display: none;" onclick="closeModal()"></div>
 
 {% endblock %}
@@ -98,5 +149,63 @@
         document.getElementById('see-more-modal').style.display = 'none';
         document.getElementById('overlay').style.display = 'none';
     }
+</script>
+<script>
+    // Opens the Edit Modal and Pre-fill the Data
+    document.querySelectorAll('.edit-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const resumeId = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const email = this.getAttribute('data-email');
+            const phone = this.getAttribute('data-phone');
+            const skills = this.getAttribute('data-skills');
+            const experience = this.getAttribute('data-experience');
+            const ctc = this.getAttribute('data-ctc');
+            const education = this.getAttribute('data-education');
+            const appliedFor = this.getAttribute('data-applied-for');
+
+            // Sets the modal input values
+            document.getElementById('edit-resume-id').value = resumeId;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-phone').value = phone;
+            document.getElementById('edit-skills').value = skills;
+            document.getElementById('edit-experience').value = experience;
+            document.getElementById('edit-ctc').value = ctc;
+            document.getElementById('edit-education').value = education;
+            document.getElementById('edit-applied-for').value = appliedFor;
+
+            // Display the modal
+            document.getElementById('edit-modal').style.display = 'block';
+        });
+    });
+
+    // Close the modal
+    function closeEditModal() {
+        document.getElementById('edit-modal').style.display = 'none';
+    }
+
+    // Handle form submission
+    document.getElementById('edit-resume-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('{% url "edit_resume" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Resume updated successfully!');
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert('Error updating resume!');
+            }
+        })
+        .catch(error => {
+            alert('Error occurred!');
+        });
+    });
 </script>
 {% endblock %}
