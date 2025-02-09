@@ -61,16 +61,18 @@ I am sharing some of the screenshots from the application here.
 ![image](https://github.com/user-attachments/assets/863a417a-3c36-4917-8528-dd30d59850d4)
 
 3. **View/Edit resume list**
-![image](https://github.com/user-attachments/assets/d6f8830a-6c49-4bf8-b299-dd102039a092)
-![image](https://github.com/user-attachments/assets/d2d00f41-8c88-4604-b6bd-947d7d96621d)
 
+- **View, search, sort, filter profiles**
+![image](https://github.com/user-attachments/assets/79ea4a98-f8ee-448c-9214-34c47b891c8e)
+- **Edit existing profile**
+![image](https://github.com/user-attachments/assets/e1197a40-5a07-4cfe-9e1f-b3ca9f44adba)
 
 5. **Chat assistant**
 
-- **Search in simple human language**
-![image](https://github.com/user-attachments/assets/2f710728-9ec8-4264-85e8-82ec19c30973)
-- **It still shows result if searching with typo**
+- **Search in simple human language with typo**
 ![image](https://github.com/user-attachments/assets/c734ea40-7e4b-463e-bb60-a74db35242b6)
+- **It still shows result if searching with typo**
+![image](https://github.com/user-attachments/assets/661a1380-0722-4e5e-a08f-5ab1867a8416)
 
 
 
