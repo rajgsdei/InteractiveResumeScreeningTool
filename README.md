@@ -40,7 +40,7 @@ And finally the Chat assistant which is the core and growing feature of the appl
 - Offers the ability to filter resumes based on skills, experience, or education, and allows semantic search to find resumes based on content similarity.
 
 ### Technologies Used:
-- **Backend Framework:** Django
+- **Backend Framework:** Python, Django
 - **Database:** MongoDB (using Djongo for compatibility)
 - **NLP and Machine Learning Libraries:** spaCy, TextBlob, Hugging Face Transformers, Sentence-Transformers, and others.
 - **Frontend:** HTML, CSS (for templating in Django)
@@ -68,7 +68,6 @@ I am sharing some of the screenshots from the application here.
 ![image](https://github.com/user-attachments/assets/2f710728-9ec8-4264-85e8-82ec19c30973)
 - **It still shows result if searching with typo**
 ![image](https://github.com/user-attachments/assets/c734ea40-7e4b-463e-bb60-a74db35242b6)
-
 
 
 
