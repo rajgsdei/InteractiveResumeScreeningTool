@@ -119,7 +119,7 @@ def edit_resume(request):
         name = request.POST.get('name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
-        skills = request.POST.get('skills').split(',')  # Assuming skills are passed as comma-separated
+        skills = request.POST.get('skills').split(',')
         experience = request.POST.get('experience')
         current_ctc = request.POST.get('current_ctc')
         expected_ctc = request.POST.get('expected_ctc')
@@ -151,8 +151,8 @@ def upload(request):
     uploaded_files = []
     all_resumes = []
 
-    if request.method == 'POST' and request.FILES.getlist('resume'):  # Using getlist to retrieve all uploaded files
-        resumes = request.FILES.getlist('resume')  # Get all the files from the form
+    if request.method == 'POST' and request.FILES.getlist('resume'):
+        resumes = request.FILES.getlist('resume')
 
         for resume in resumes:
             try:
