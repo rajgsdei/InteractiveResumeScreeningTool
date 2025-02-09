@@ -69,7 +69,7 @@ I am sharing some of the screenshots from the application here.
 
 5. **Chat assistant**
 
-- **Search in simple human language with typo**
+- **Search in simple human language**
 ![image](https://github.com/user-attachments/assets/c734ea40-7e4b-463e-bb60-a74db35242b6)
 - **It still shows result if searching with typo**
 ![image](https://github.com/user-attachments/assets/661a1380-0722-4e5e-a08f-5ab1867a8416)
