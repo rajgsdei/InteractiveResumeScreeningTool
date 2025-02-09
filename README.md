@@ -67,7 +67,7 @@ I am sharing some of the screenshots from the application here.
 - **Edit existing profile**
 ![image](https://github.com/user-attachments/assets/e1197a40-5a07-4cfe-9e1f-b3ca9f44adba)
 
-5. **Chat assistant**
+4. **Chat assistant**
 
 - **Search in simple human language**
 ![image](https://github.com/user-attachments/assets/c734ea40-7e4b-463e-bb60-a74db35242b6)
