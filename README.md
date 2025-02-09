@@ -23,9 +23,10 @@ The home page has various types of charts on the page based on candidate's profi
 - The uploaded resumes are displayed with basic information, and users can click to upload another resume.
 - Before saving the resume (s) user can edit fields if needed.
 
-#### 3. View Resume Page:
+#### 3. View/Edit Resume Page:
 
 - This feature allows users to view a list of all uploaded resumes with pagination for easier navigation. Each resume can also be downloaded.
+- This feature allows user to edit any existing profile of a candidate. When clicking on Edit button it opens a modal popup where user can edit fields and save.
 
 #### 4. About Page:
 
@@ -59,10 +60,12 @@ I am sharing some of the screenshots from the application here.
 2. **Upload resume (s)**
 ![image](https://github.com/user-attachments/assets/863a417a-3c36-4917-8528-dd30d59850d4)
 
-3. **View resume list**
+3. **View/Edit resume list**
 ![image](https://github.com/user-attachments/assets/d6f8830a-6c49-4bf8-b299-dd102039a092)
+![image](https://github.com/user-attachments/assets/d2d00f41-8c88-4604-b6bd-947d7d96621d)
 
-4. **Chat assistant**
+
+5. **Chat assistant**
 
 - **Search in simple human language**
 ![image](https://github.com/user-attachments/assets/2f710728-9ec8-4264-85e8-82ec19c30973)
