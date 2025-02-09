@@ -8,7 +8,7 @@ Built using **Django** as the backend framework, the system integrates **MongoDB
 
 ![diagram-export-2-9-2025-12_09_52-PM](https://github.com/user-attachments/assets/929e947a-46ad-4337-a4f3-ac00f44a0cb3)
 
-### Features:
+### Features
 #### 1. Home Page:
 
 The home page has various types of charts on the page based on candidate's profile, including:
@@ -130,7 +130,7 @@ Follow these steps to set up and run the **Interactive Resume Screening** projec
    ```
 10. **Run the Server:**
     
-   ```
-   python manage.py runserver
-   http://127.0.0.1:8000/
-   ```
+      ```
+      python manage.py runserver
+      http://127.0.0.1:8000/
+      ```
