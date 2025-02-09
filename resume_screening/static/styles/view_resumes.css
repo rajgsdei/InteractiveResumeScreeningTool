@@ -120,3 +120,28 @@
     background-color: transparent;
     color: #174949;
 }
+
+.sortable a{
+    color: #fff;
+}
+
+.asc-arrow::before {
+    content: "↑";
+}
+
+.desc-arrow::before {
+    content: "↓";
+}
+
+.search-bar{
+    justify-self: left;
+    margin-bottom: 6px;
+    #search-input{
+        height: 34px;
+        font-size: medium;
+        width: 300px;
+    }
+    button{
+        height: 41px;
+    }
+}
