@@ -66,19 +66,52 @@ def about(request):
     return render(request, 'resume_screening/about.html')
 
 
+from django.db.models import Q
+
+
 def view_resumes(request):
     try:
+        # Initial resume list
         resumes_list = Resume.objects.all()
 
-        # it sets up pagination (like show 10 records per page)
+        # Handle search query
+        search_query = request.GET.get('search', None)
+        if search_query:
+            resumes_list = resumes_list.filter(
+                Q(name__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(phone__icontains=search_query) |
+                Q(skills__icontains=search_query)
+            )
+
+        # Sorting functionality
+        sort_column = request.GET.get('sort', 'name')  # Default sort by name
+        sort_order = request.GET.get('order', 'asc')  # Default ascending order
+
+        if sort_column and sort_order:
+            if sort_order == 'asc':
+                resumes_list = resumes_list.order_by(sort_column)
+            else:
+                resumes_list = resumes_list.order_by(f'-{sort_column}')
+
+        # Pagination
         paginator = Paginator(resumes_list, 10)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-        return render(request, 'resume_screening/view_resumes.html',
-                      {'MEDIA_URL': settings.MEDIA_URL,'resumes': resumes_list, 'page_obj': page_obj})
+
+        return render(request, 'resume_screening/view_resumes.html', {
+            'MEDIA_URL': settings.MEDIA_URL,
+            'resumes': resumes_list,
+            'page_obj': page_obj,
+            'sort_column': sort_column,
+            'sort_order': sort_order,
+            'search_query': search_query
+        })
+
     except Exception as e:
         error_message = traceback.format_exc()
         return HttpResponse(f"Database connection failed: {error_message}")
+
 
 def edit_resume(request):
     if request.method == 'POST':
@@ -89,6 +122,7 @@ def edit_resume(request):
         skills = request.POST.get('skills').split(',')  # Assuming skills are passed as comma-separated
         experience = request.POST.get('experience')
         current_ctc = request.POST.get('current_ctc')
+        expected_ctc = request.POST.get('expected_ctc')
         education = request.POST.get('education')
         applied_for = request.POST.get('applied_for')
 
@@ -100,6 +134,7 @@ def edit_resume(request):
             resume.skills = skills
             resume.experience = 0 if experience == "" else float(experience)
             resume.current_ctc = 0 if current_ctc == "" else float(current_ctc)
+            resume.expected_ctc = 0 if expected_ctc == "" else float(expected_ctc)
             resume.education = education
             resume.applied_for = applied_for
             resume.save()
